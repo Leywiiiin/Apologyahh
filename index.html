@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For Madam 🐈‍⬛</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&family=Patrick+Hand&family=Shadows+Into+Light&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* --- Life is Strange / Max's Journal Aesthetics --- */
+        
+        :root {
+            --paper-color: #f4ecd8; 
+            --ink-color: #2a2222;
+            --tape-color: rgba(255, 255, 245, 0.6);
+        }
+
+        /* Custom Butterfly Cursor */
+        body {
+            font-family: 'Indie Flower', cursive;
+            background-color: #0f0c0a; 
+            overflow: hidden; /* Lock body scroll */
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* Mobile viewport fix */
+            width: 100vw;
+            color: var(--ink-color);
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M4 10C4 10 0 2 10 4C10 4 14 10 16 16C18 10 22 4 22 4C32 2 28 10 28 10C28 10 32 18 24 22C24 22 20 28 16 26C12 28 8 22 8 22C0 18 4 10 4 10Z" fill="%2360a5fa" stroke="%231e3a8a" stroke-width="1" opacity="0.8"/></svg>') 16 16, auto;
+        }
+
+        /* Atmospheric Background Layers */
+        .atmosphere {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background: radial-gradient(circle at 50% 30%, #4a3b32 0%, #2a1e17 40%, #0f0c0a 80%);
+            animation: lightShift 20s ease-in-out infinite alternate;
+        }
+
+        /* Film Grain Overlay */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -5;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        @keyframes lightShift {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.1); }
+        }
+        
+        /* Force pointer on clickable elements */
+        button, .polaroid, a {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M4 10C4 10 0 2 10 4C10 4 14 10 16 16C18 10 22 4 22 4C32 2 28 10 28 10C28 10 32 18 24 22C24 22 20 28 16 26C12 28 8 22 8 22C0 18 4 10 4 10Z" fill="%233b82f6" stroke="%231e3a8a" stroke-width="2" opacity="1"/></svg>') 16 16, pointer;
+        }
+
+        /* The Journal Page Texture - Refined */
+        .journal-page {
+            background-color: var(--paper-color);
+            background-image: 
+                url("https://www.transparenttextures.com/patterns/crinkle-paper.png"),
+                linear-gradient(to bottom, transparent 96%, rgba(62, 39, 35, 0.05) 97%);
+            background-size: auto, 100% 32px;
+            box-shadow: 
+                inset 0 0 60px rgba(62, 39, 35, 0.15),
+                0 0 0 1px #2a1e17,
+                0 30px 60px rgba(0,0,0,0.7);
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1500px; /* Essential for 3D flip */
+        }
+        
+        /* Binding edge shadow */
+        .journal-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 30px; /* Smaller binding on mobile */
+            background: linear-gradient(to right, rgba(42, 30, 23, 0.3), transparent);
+            pointer-events: none;
+            z-index: 10;
+        }
+        @media (min-width: 768px) {
+            .journal-page::before { width: 40px; }
+        }
+
+        /* Styled Scrollbar for Notebook */
+        .journal-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(62, 39, 35, 0.2) transparent;
+        }
+        .journal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .journal-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .journal-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(62, 39, 35, 0.2);
+            border-radius: 4px;
+        }
+
+        .handwritten-title {
+            font-family: 'Shadows Into Light', cursive;
+            font-weight: 700;
+        }
+        
+        .journal-text {
+            font-family: 'Nanum Pen Script', cursive; 
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+        }
+
+        /* Polaroid Effect */
+        .polaroid {
+            background: #fffef8;
+            padding: 6px 6px 30px 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            filter: contrast(0.95) brightness(1.02) sepia(0.2);
+        }
+        @media (min-width: 768px) {
+            .polaroid { padding: 8px 8px 40px 8px; }
+        }
+        .polaroid:hover {
+            transform: scale(1.03) rotate(1deg) !important;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            z-index: 30;
+            filter: contrast(1) brightness(1) sepia(0);
+        }
+        
+        /* Realistic Masking Tape */
+        .tape {
+            position: absolute;
+            background-color: var(--tape-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            backdrop-filter: blur(2px);
+            opacity: 0.8;
+            height: 20px;
+            width: 60px;
+            z-index: 20;
+            clip-path: polygon(2% 5%, 98% 0%, 100% 95%, 0% 100%); 
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        @media (min-width: 768px) {
+            .tape { height: 25px; width: 80px; }
+        }
+
+        /* Scribbles and Doodles */
+        .doodle-svg {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.5;
+            mix-blend-mode: multiply;
+        }
+
+        /* --- New 3D Flip Animation --- */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(0.3deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .floating-notebook {
+            animation: float 8s ease-in-out infinite;
+        }
+
+        /* The specific page turn effect */
+        .page-enter {
+            animation: flipIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            transform-origin: left center; /* Hinge from the spine */
+            backface-visibility: hidden;
+        }
+
+        @keyframes flipIn {
+            0% { 
+                opacity: 0; 
+                transform: rotateY(-90deg); /* Start closed/flipped */
+            }
+            100% { 
+                opacity: 1; 
+                transform: rotateY(0deg); /* End flat */
+            }
+        }
+
+        /* Staggered Element Fade In */
+        .stagger-1 { animation: fadeIn 0.5s ease-out 0.3s backwards; }
+        .stagger-2 { animation: fadeIn 0.5s ease-out 0.4s backwards; }
+        .stagger-3 { animation: fadeIn 0.5s ease-out 0.5s backwards; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Background Butterfly (Gentle Float) */
+        .bg-butterfly {
+            position: absolute;
+            pointer-events: none;
+            animation: butterflyFloat linear infinite;
+            will-change: transform;
+            z-index: -2;
+            opacity: 0.7;
+        }
+
+        .butterfly-wings {
+            animation: flap 1.5s ease-in-out infinite alternate;
+            transform-origin: center;
+        }
+
+        @keyframes flap {
+            0% { transform: scaleX(1); }
+            100% { transform: scaleX(0.4); }
+        }
+        
+        @keyframes butterflyFloat {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -20px) rotate(5deg); }
+            50% { transform: translate(10px, -40px) rotate(-5deg); }
+            75% { transform: translate(-20px, -20px) rotate(5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Glassmorphic Controls */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .glass-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .glass-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+    <div id="root" class="w-full h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // --- Icons ---
+        const IconArrowLeft = ({ size = 24, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m12 19-7-7 7-7"/>
+                <path d="M19 12H5"/>
+            </svg>
+        );
+
+        const IconArrowRight = ({ size = 24, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+            </svg>
+        );
+
+        const IconMusic = ({ size = 24, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+            </svg>
+        );
+
+        // --- SVGs for "Max's Doodles" ---
+        const Doodles = {
+            Butterfly: ({ className, style }) => (
+                <svg viewBox="0 0 100 100" className={`doodle-svg ${className}`} style={style}>
+                    <path d="M50,50 C30,20 10,30 10,50 C10,70 30,80 50,50 Z" fill="rgba(59, 130, 246, 0.1)" stroke="#2563eb" strokeWidth="1" />
+                    <path d="M50,50 C70,20 90,30 90,50 C90,70 70,80 50,50 Z" fill="rgba(59, 130, 246, 0.1)" stroke="#2563eb" strokeWidth="1" />
+                    <path d="M50,50 C30,50 15,65 20,80 C25,95 45,60 50,50 Z" fill="rgba(59, 130, 246, 0.05)" stroke="#2563eb" strokeWidth="1" />
+                    <path d="M50,50 C70,50 85,65 80,80 C75,95 55,60 50,50 Z" fill="rgba(59, 130, 246, 0.05)" stroke="#2563eb" strokeWidth="1" />
+                    <line x1="50" y1="40" x2="50" y2="60" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="50" cy="38" r="1.5" fill="#1a1a1a" />
+                </svg>
+            ),
+            Spiral: ({ className, style }) => (
+                <svg viewBox="0 0 100 100" className={`doodle-svg ${className}`} style={style}>
+                    <path d="M50,50 m-30,0 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0" fill="none" stroke="#5d4037" strokeWidth="1" strokeDasharray="3,3" opacity="0.4"/>
+                    <path d="M50,50 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0" fill="none" stroke="#5d4037" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M50,50 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" fill="none" stroke="#5d4037" strokeWidth="1.5" />
+                </svg>
+            ),
+            Star: ({ className, style }) => (
+                <svg viewBox="0 0 50 50" className={`doodle-svg ${className}`} style={style}>
+                    <path d="M25,5 L28,18 L42,18 L31,26 L35,39 L25,31 L15,39 L19,26 L8,18 L22,18 Z" fill="none" stroke="#444" strokeWidth="1.5" strokeLinejoin="round" />
+                </svg>
+            ),
+            Scribble: ({ className, style }) => (
+                <svg viewBox="0 0 100 20" className={`doodle-svg ${className}`} style={style}>
+                    <path d="M0,10 Q10,0 20,10 T40,10 T60,10 T80,10 T100,10" fill="none" stroke="#444" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+                </svg>
+            )
+        };
+
+        // --- Dust Particles ---
+        const DustParticles = () => {
+            const particles = [...Array(15)].map((_, i) => ({
+                id: i,
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                duration: Math.random() * 20 + 10 + 's',
+                delay: Math.random() * 5 + 's',
+                size: Math.random() * 3 + 1 + 'px'
+            }));
+
+            return (
+                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                    {particles.map(p => (
+                        <div 
+                            key={p.id}
+                            className="particle absolute bg-orange-100/30 rounded-full animate-pulse"
+                            style={{
+                                left: p.left,
+                                top: p.top,
+                                width: p.size,
+                                height: p.size,
+                                animationDuration: p.duration,
+                                animationDelay: p.delay,
+                                transform: `translateY(-${Math.random() * 100}px)`
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        };
+
+        // --- Background Butterflies (Drifting) ---
+        const BackgroundButterflies = () => {
+            const butterflies = [...Array(10)].map((_, i) => ({
+                id: i,
+                left: Math.random() * 100,
+                top: Math.random() * 100,
+                scale: Math.random() * 0.4 + 0.4, // Slightly smaller for mobile
+                hue: Math.random() * 30 - 15,
+                duration: Math.random() * 20 + 15 + 's',
+                delay: Math.random() * 10 + 's'
+            }));
+
+            return (
+                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                    {butterflies.map(b => (
+                        <div 
+                            key={b.id}
+                            className="bg-butterfly"
+                            style={{
+                                left: `${b.left}%`,
+                                top: `${b.top}%`,
+                                transform: `scale(${b.scale})`, 
+                                filter: `hue-rotate(${b.hue}deg)`,
+                                animationDuration: b.duration,
+                                animationDelay: b.delay
+                            }}
+                        >
+                            <svg width="60" height="60" viewBox="0 0 100 100" className="opacity-50 butterfly-wings drop-shadow-lg">
+                                <path d="M50,50 C30,10 0,20 10,50 C20,80 40,80 50,50 Z" fill="#60a5fa" stroke="#93c5fd" strokeWidth="1" />
+                                <path d="M50,50 C70,10 100,20 90,50 C80,80 60,80 50,50 Z" fill="#60a5fa" stroke="#93c5fd" strokeWidth="1" />
+                                <path d="M50,50 C30,50 15,70 20,85 C25,100 45,60 50,50 Z" fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
+                                <path d="M50,50 C70,50 85,70 80,85 C75,100 55,60 50,50 Z" fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
+                                <line x1="50" y1="30" x2="50" y2="70" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />
+                            </svg>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        // --- Main Components ---
+
+        const Polaroid = ({ src, caption, rotate = 0, onClick }) => (
+            <div 
+                className="polaroid w-[220px] md:w-[260px] mx-auto my-6 relative transform transition-transform"
+                style={{ transform: `rotate(${rotate}deg)` }}
+                onClick={onClick}
+                title="Click to paste image link"
+            >
+                <div className="tape -top-3 left-1/2 -translate-x-1/2 rotate-3 width-[100px]"></div>
+                
+                <div className="w-full aspect-square overflow-hidden bg-[#e5e5e5] mb-2 shadow-inner">
+                    <img src={src} alt="memory" className="w-full h-full object-cover mix-blend-multiply opacity-95" />
+                </div>
+                
+                <div className="text-center pt-2 pb-1">
+                    <p className="text-gray-800 text-lg md:text-xl font-handwritten leading-none transform -rotate-1">{caption}</p>
+                </div>
+            </div>
+        );
+
+        const Coupon = ({ text }) => (
+            <div className="bg-[#fffef8] p-3 md:p-4 shadow-sm cursor-default flex items-center gap-3 border border-dashed border-[#d7ccc8] transform hover:-rotate-1 transition-transform relative overflow-hidden rounded-sm group">
+                <div className="absolute top-0 left-0 w-full h-full bg-yellow-50/0 group-hover:bg-yellow-50/30 transition-colors pointer-events-none"></div>
+                <span className="text-xl md:text-2xl text-blue-400 opacity-70">♡</span>
+                <div className="flex-1">
+                    <p className="font-handwritten text-lg md:text-xl text-gray-800 leading-none mt-1">{text}</p>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const App = () => {
+            const [page, setPage] = useState(0);
+            const [audioStarted, setAudioStarted] = useState(false);
+            const audioRef = useRef(null);
+
+            // --- PAGE CONTENT STATE ---
+            const [pages, setPages] = useState([
+                {
+                    // PAGE 1
+                    type: 'cover',
+                    title: "MORNINGGGG BABYYYYY!!!",
+                    text: "UHMM HII BABY UH I HAD TO OKAI OKAI?? i just wanted to express how i felt.. MWAH hope this makes your morning better",
+                    gif: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnc3YWNwZ3RhNWFkY2pzcnlkc29icHd5c2NlMGo1em9sbTBpbHo2cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/iDJC1dBsaGslJ3s42F/giphy.gif",
+                    caption: "sunlight & thoughts",
+                    rotation: -2,
+                    doodles: ['butterfly', 'scribble']
+                },
+                {
+                    // PAGE 2
+                    type: 'text-focus',
+                    title: "just wanted to say this okai?",
+                    text: [
+                        "hey baby i didnt mean us to end up fighting yesterday first and foremost i really wanna apologize making my emotions and saying stupid stuff like you were playing with me and stuff and i really feel bad that you had panic attacks and stuff i really didnt wanna hurt my baby so i am sorry mhm? mwah"
+                    ],
+                    gif: "https://media.giphy.com/media/L95W4wv8nnb9K/giphy.gif",
+                    caption: "words > intent",
+                    rotation: 3,
+                    doodles: ['star']
+                },
+                {
+                    // PAGE 3 (Custom Message)
+                    type: 'text-focus',
+                    title: "making sure mhm?",
+                    text: [
+                        "this something i cooked up in a night so forgive me for some mistakes and stuff and baby i just really wanna let you know i really miss you rn the call just ended i was cooking it up rn LMFAO and um 🫂🫂🫂",
+                        "i said stupid stuff yesterday but i am not going to leave you and no i wont get tired of you baby i dont get enough of you i am just so clingy dawg istg and um also i really do fucking love you and when i said i wanna spend a lifetime with you i really really did mean it..",
+                        "i dont want you to feel like whenever i apologize its because i want to make you feel guilty i apologized because i feel really fucking bad for hurting my baby bro istg i cried so much just because i hurt you i dont wanna go over it but i really do care about you so mwah"
+                    ],
+                    gif: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZW9xMWJlNDgzOGFueGpmZGwwenBlZjRhbW4xNGJlZWM4cTRiczg3bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BwnSfWb6eHehoz3Ysd/giphy.gif", 
+                    caption: "my perspective",
+                    rotation: 1,
+                    doodles: ['scribble']
+                },
+                {
+                    // PAGE 4
+                    type: 'text-focus',
+                    title: "You are safe here.",
+                    text: [
+                        "You did nothing wrong. You weren't 'playing' with me.",
+                        "I am your safe space, not your judge. Always."
+                    ],
+                    gif: "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3RwcG9rdnhlbGx6bTFqZ3o2NXN2OThoNGE3ZzBsdm85M2treWw2OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pBaqGH7J842v5h3X8Q/giphy.gif",
+                    caption: "safe space. always.",
+                    rotation: -1,
+                    doodles: ['spiral']
+                },
+                {
+                    // PAGE 5
+                    type: 'text-focus',
+                    title: "trynna be better fr",
+                    text: [
+                        "IK i did things wrong i expressed my emotions in a completely wrong way so i wanna apologize for it again but that doesnt mean i will repeat it again i am saying it rn cause i want you to hear it i will prove it as we move on mhm?"
+                    ],
+                    gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVtYXd4YTBseG9wdzRtN2tyeTF6cGxxMG5udG43MzJkOXN3NjhrbiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/OpYV9CBVZOb1S/giphy.gif",
+                    caption: "work in progress...",
+                    rotation: 2,
+                    doodles: ['scribble']
+                },
+                {
+                    // PAGE 6
+                    type: 'coupons',
+                    title: "Small offerings",
+                    text: "Just a reminder that I'm here.",
+                    coupons: [
+                        "Redeem for reassurance 🤍",
+                        "Redeem for listening",
+                        "Redeem for space"
+                    ],
+                    gif: "https://media.giphy.com/media/3oEdv4hwWTzBhWvaU0/giphy.gif",
+                    caption: "virtual hug",
+                    rotation: -3,
+                    doodles: ['butterfly', 'star']
+                },
+                {
+                    // PAGE 7 (Ending)
+                    type: 'cover',
+                    title: "We're okay.",
+                    text: "I'm not going anywhere. When I say sorry, it's because I love you.",
+                    subtext: "love learning to be gentler.",
+                    gif: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTVzMHNoaWt2aHBucndxNnYwa2NtNXR2ZmNjbDVtdzRmZHZpNWgxdCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3tI08VL88AQ5FoOB0h/giphy.gif",
+                    caption: "resting here.",
+                    rotation: 1,
+                    doodles: ['spiral', 'butterfly']
+                }
+            ]);
+
+            const totalPages = pages.length;
+
+            // --- AUDIO LOGIC ---
+            useEffect(() => {
+                const handleInteraction = () => {
+                    if (!audioStarted && audioRef.current) {
+                        audioRef.current.play().then(() => {
+                            setAudioStarted(true);
+                        }).catch(e => console.log("Audio play blocked until interaction"));
+                    }
+                };
+
+                window.addEventListener('click', handleInteraction);
+                return () => window.removeEventListener('click', handleInteraction);
+            }, [audioStarted]);
+
+
+            const handleNext = () => {
+                if (page < totalPages - 1) setPage(p => p + 1);
+            };
+
+            const handlePrev = () => {
+                if (page > 0) setPage(p => p - 1);
+            };
+
+            // Image Edit (Prompt for URL)
+            const handleImageClick = () => {
+                const url = window.prompt("Paste the link to your GIF or Image here:", "");
+                if (url && (url.startsWith('http') || url.startsWith('data:'))) {
+                    const newPages = [...pages];
+                    newPages[page].gif = url;
+                    setPages(newPages);
+                }
+            };
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key === 'ArrowRight' || e.key === ' ') handleNext();
+                    if (e.key === 'ArrowLeft') handlePrev();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [page]);
+
+            // --- Render Logic ---
+            const renderDoodles = (doodleTypes) => {
+                return doodleTypes.map((type, i) => {
+                    const style = {
+                        top: `${Math.random() * 80 + 5}%`,
+                        left: `${Math.random() * 80 + 5}%`,
+                        width: '60px',
+                        transform: `rotate(${Math.random() * 360}deg)`
+                    };
+                    if (type === 'butterfly') return <Doodles.Butterfly key={i} style={{...style, width: '80px', top: '10%'}} className="absolute z-0" />;
+                    if (type === 'spiral') return <Doodles.Spiral key={i} style={style} className="absolute z-0" />;
+                    if (type === 'star') return <Doodles.Star key={i} style={style} className="absolute z-0" />;
+                    if (type === 'scribble') return <Doodles.Scribble key={i} style={{...style, width: '120px', left: '10%'}} className="absolute z-0" />;
+                    return null;
+                });
+            };
+
+            const renderContent = (data) => {
+                const ImageComponent = () => (
+                    <div className="relative group inline-block z-10 my-4 stagger-2">
+                        <Polaroid 
+                            src={data.gif} 
+                            caption={data.caption} 
+                            rotate={data.rotation} 
+                            onClick={handleImageClick} 
+                        />
+                        <div className="absolute -right-8 top-10 transform rotate-12 bg-yellow-200 text-black text-xs font-handwritten px-2 py-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 rounded">
+                            change photo?
+                        </div>
+                    </div>
+                );
+
+                // --- Layout: Portrait Journal Page ---
+                return (
+                    <div key={page} className="flex flex-col min-h-full relative px-4 md:px-6 py-6 md:py-10 page-enter">
+                        {renderDoodles(data.doodles || [])}
+                        
+                        {/* Title Section - Responsive Text */}
+                        <div className="text-center mb-4 md:mb-6 relative z-10 stagger-1">
+                            <h1 className="handwritten-title text-3xl md:text-5xl text-gray-800 leading-tight transform -rotate-1 inline-block border-b-2 border-gray-400/30 pb-2">
+                                {data.title}
+                            </h1>
+                        </div>
+
+                        {/* Middle Content */}
+                        <div className="flex-1 flex flex-col items-center justify-start gap-4 relative z-10">
+                            <ImageComponent />
+                            
+                            {data.type === 'coupons' ? (
+                                <div className="space-y-4 w-full max-w-sm mt-4 stagger-3">
+                                    {data.coupons.map((coupon, i) => (
+                                        <Coupon key={i} text={coupon} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="max-w-md w-full relative pb-10 stagger-3">
+                                    {(Array.isArray(data.text) ? data.text : [data.text]).map((p, i) => (
+                                        <p key={i} className="journal-text text-xl md:text-2xl text-gray-800 mb-4 relative pl-3 border-l-2 border-blue-200/30">
+                                            {p}
+                                        </p>
+                                    ))}
+                                    {data.subtext && (
+                                        <p className="journal-text text-lg md:text-xl text-gray-500 mt-4 text-center transform rotate-1">
+                                            ( {data.subtext} )
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex items-center justify-center w-full h-full relative">
+                    <div className="atmosphere"></div>
+                    <div className="noise"></div>
+                    <DustParticles />
+                    <BackgroundButterflies />
+
+                    {/* Audio Element (Hidden) */}
+                    <audio ref={audioRef} loop>
+                        <source src="music.mp3" type="audio/mpeg" />
+                    </audio>
+
+                    {/* Audio Status Hint */}
+                    <div className="fixed bottom-6 left-6 z-50 transition-opacity duration-1000 pointer-events-none" style={{opacity: audioStarted ? 0 : 0.8}}>
+                        <span className="flex items-center gap-2 text-xs font-handwritten text-white/80 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
+                             <IconMusic size={12} /> Click anywhere to start music
+                        </span>
+                    </div>
+
+                    {/* Main Content Area - Locked Layout */}
+                    <div className="relative z-20 flex flex-col items-center justify-center gap-4 md:gap-6 h-full w-full max-w-4xl p-2 md:p-0">
+                        
+                        {/* Main Notebook Container - Portrait Mode & Static */}
+                        <div className="floating-notebook relative w-[95%] md:w-full max-w-[500px] h-[80dvh] md:h-[85vh] journal-page rounded-r-lg rounded-l-sm transform transition-transform duration-500 shadow-2xl">
+                            
+                            {/* Binding (Left) */}
+                            <div className="absolute left-2 top-0 bottom-0 w-[4px] border-r-2 border-dotted border-gray-400/30 z-20"></div>
+
+                            {/* Content Area - Scrollable Inside */}
+                            <div className="w-full h-full relative">
+                                 {/* Page Number */}
+                                <div className="absolute top-3 right-4 text-gray-400 font-handwritten text-lg md:text-xl z-20 pointer-events-none">
+                                    {page + 1}
+                                </div>
+                                
+                                {/* Scrollable Container */}
+                                <div className="w-full h-full overflow-y-auto overflow-x-hidden journal-scroll relative z-20">
+                                    {renderContent(pages[page])}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modern Controls - Floating Pills */}
+                        <div className="flex gap-4 items-center">
+                            <button 
+                                onClick={handlePrev} 
+                                disabled={page === 0}
+                                className="glass-btn rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center gap-2 font-handwritten text-lg md:text-xl"
+                            >
+                                <IconArrowLeft size={18} /> Prev
+                            </button>
+
+                            <button 
+                                onClick={handleNext} 
+                                disabled={page === totalPages - 1}
+                                className="glass-btn rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center gap-2 font-handwritten text-lg md:text-xl"
+                            >
+                                Next <IconArrowRight size={18} />
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
